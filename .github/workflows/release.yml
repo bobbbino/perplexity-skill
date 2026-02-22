@@ -1,0 +1,111 @@
+name: Release skill
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  skill-bundle:
+    name: Build skill .zip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bundle skill files
+        run: |
+          mkdir -p _bundle
+          find . -maxdepth 1 -iname 'skill.md' -exec cp {} _bundle/SKILL.md \;
+          [ -f install.sh ] && cp install.sh _bundle/
+          [ -d references ] && cp -r references _bundle/
+          cd _bundle && zip -r "../${{ github.event.repository.name }}-${{ github.ref_name }}.zip" .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "${{ github.event.repository.name }}-${{ github.ref_name }}.zip"
+          generate_release_notes: true
+
+  check-cli:
+    name: Check for CLI package
+    runs-on: ubuntu-latest
+    outputs:
+      has_cli: ${{ steps.check.outputs.has_cli }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        run: |
+          if [ -f pyproject.toml ]; then
+            echo "has_cli=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_cli=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-binaries:
+    name: Build native binary (${{ matrix.os }})
+    needs: [skill-bundle, check-cli]
+    if: needs.check-cli.outputs.has_cli == 'true'
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            asset_suffix: macos-arm64
+          - os: ubuntu-latest
+            asset_suffix: linux-x86_64
+          - os: windows-latest
+            asset_suffix: windows-x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Read CLI entry point
+        id: meta
+        shell: bash
+        run: |
+          uv run python -c "
+          import tomllib, pathlib
+          cfg = tomllib.loads(pathlib.Path('pyproject.toml').read_text())
+          scripts = cfg['project']['scripts']
+          name = list(scripts.keys())[0]
+          ep = list(scripts.values())[0]
+          module, func = ep.split(':')
+          pkg = module.rsplit('.', 1)[0]
+          print(f'name={name}')
+          print(f'module={module}')
+          print(f'func={func}')
+          print(f'pkg={pkg}')
+          " >> "$GITHUB_OUTPUT"
+
+      - name: Build binary with PyInstaller
+        shell: bash
+        run: |
+          EXT=""
+          if [ "${{ runner.os }}" = "Windows" ]; then EXT=".exe"; fi
+          BINARY_NAME="${{ steps.meta.outputs.name }}-${{ matrix.asset_suffix }}${EXT}"
+          echo "from ${{ steps.meta.outputs.module }} import ${{ steps.meta.outputs.func }}; ${{ steps.meta.outputs.func }}()" > _entry.py
+          uv run pyinstaller --onefile \
+            --name "$BINARY_NAME" \
+            --collect-submodules "${{ steps.meta.outputs.pkg }}" \
+            --collect-submodules rich \
+            _entry.py
+
+      - name: Smoke-test binary
+        shell: bash
+        run: |
+          EXT=""
+          if [ "${{ runner.os }}" = "Windows" ]; then EXT=".exe"; fi
+          BINARY_NAME="${{ steps.meta.outputs.name }}-${{ matrix.asset_suffix }}${EXT}"
+          ./dist/"$BINARY_NAME" --help
+
+      - name: Upload binary to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/${{ steps.meta.outputs.name }}-${{ matrix.asset_suffix }}*
