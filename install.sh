@@ -2,10 +2,10 @@
 set -euo pipefail
 
 # Install script for perplexity
-# Usage: curl -fsSL https://raw.githubusercontent.com/bobbyhyam/perplexity-skill/main/install.sh | bash -s -- claude-code
+# Usage: curl -fsSL https://raw.githubusercontent.com/bobbbino/perplexity-skill/main/install.sh | bash -s -- claude-code
 
 SKILL_NAME="perplexity"
-OWNER="bobbyhyam"
+OWNER="bobbbino"
 REPO="perplexity-skill"
 ENV_VAR="PERPLEXITY_API_KEY"
 KEYRING_ACCOUNT="perplexity_api_key"

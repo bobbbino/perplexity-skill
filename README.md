@@ -15,13 +15,13 @@ An agent skill and CLI tool that gives AI agents access to Perplexity's real-tim
 
 ### Install the skill
 ```bash
-curl -fsSL https://raw.githubusercontent.com/bobbyhyam/perplexity-skill/main/install.sh | bash -s -- claude-code
+curl -fsSL https://raw.githubusercontent.com/bobbbino/perplexity-skill/main/install.sh | bash -s -- claude-code
 ```
 
 <details><summary>Manual install</summary>
 
 ```bash
-gh release download --repo bobbyhyam/perplexity-skill --pattern '*.zip'
+gh release download --repo bobbbino/perplexity-skill --pattern '*.zip'
 unzip perplexity-skill-*.zip -d ~/.claude/skills/perplexity
 ```
 </details>
@@ -29,7 +29,7 @@ unzip perplexity-skill-*.zip -d ~/.claude/skills/perplexity
 ### Set up credentials
 ```bash
 # Option 1: run the install script (offers OS keychain or shell profile export)
-curl -fsSL https://raw.githubusercontent.com/bobbyhyam/perplexity-skill/main/install.sh | bash -s -- claude-code
+curl -fsSL https://raw.githubusercontent.com/bobbbino/perplexity-skill/main/install.sh | bash -s -- claude-code
 
 # Option 2: export manually
 export PERPLEXITY_API_KEY=your-key-here    # from https://www.perplexity.ai/account/api
@@ -63,7 +63,7 @@ All commands support `--format json|text` and `--provider perplexity|openrouter`
 ## Development
 
 ```bash
-git clone https://github.com/bobbyhyam/perplexity-skill.git
+git clone https://github.com/bobbbino/perplexity-skill.git
 cd perplexity-skill
 uv sync
 uv run perplexity --help

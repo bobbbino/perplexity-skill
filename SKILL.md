@@ -21,7 +21,7 @@ Real-time web search, AI-powered Q&A, deep research, and step-by-step reasoning 
 - `PERPLEXITY_API_KEY` and/or `OPENROUTER_API_KEY` environment variable set (see Authentication)
 - Install the CLI:
   ```bash
-  curl -fsSL https://raw.githubusercontent.com/bobbyhyam/perplexity-skill/main/install.sh | bash -s -- claude-code
+  curl -fsSL https://raw.githubusercontent.com/bobbbino/perplexity-skill/main/install.sh | bash -s -- claude-code
   ```
 
 ---
